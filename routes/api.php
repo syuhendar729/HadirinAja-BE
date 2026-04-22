@@ -10,6 +10,13 @@ use App\Http\Controllers\UserController;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
+// Access /api to test if API is working
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'API is working!',
+    ], 200);
+});
+
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 
