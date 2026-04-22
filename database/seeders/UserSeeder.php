@@ -14,18 +14,20 @@ class UserSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
+        User::create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'nik' => '111222333444',
-            'password' => 'admin123'
+            'password' => 'admin123',
+            'role_id' => 1, 
         ]);
         
-        User::factory()->create([
+        User::create([
             'name' => 'Test User',
             'email' => 'test@example.com',
             'nik' => '123456789',
-            'password' => 'test123'
+            'password' => 'test123',
+            'role_id' => 2,
         ]);
 
     }

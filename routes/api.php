@@ -15,9 +15,10 @@ Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Route User and Auth
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [UserController::class, 'getUser']);
     Route::patch('/user', [UserController::class, 'updateUser']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::delete('/user', [UserController::class, 'deleteUser']);
     // Route Attendance
     Route::get('/attendances', [AttendanceController::class, 'getAttendance']);
     Route::post('/attendances', [AttendanceController::class, 'createAttendance']);

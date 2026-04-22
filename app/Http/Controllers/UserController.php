@@ -48,4 +48,15 @@ class UserController extends Controller
             'message' => 'Success update user!',
         ], 200);
     }
+
+    public function deleteUser(Request $request)
+    {
+        $user = Auth::user();
+        $user->delete();
+
+        return response()->json([
+            'message' => 'Success delete user!',
+        ], 200);
+    }
+    
 }
