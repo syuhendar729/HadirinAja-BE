@@ -55,6 +55,7 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json([
+            'data' => [],
             'message' => 'Success delete user!',
         ], 200);
     }

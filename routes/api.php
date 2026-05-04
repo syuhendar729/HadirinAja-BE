@@ -22,14 +22,14 @@ Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Route User and Auth
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::delete('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [UserController::class, 'getUser']);
     Route::patch('/user', [UserController::class, 'updateUser']);
     Route::delete('/user', [UserController::class, 'deleteUser']);
     // Route Attendance
-    Route::get('/attendances', [AttendanceController::class, 'getAttendance']);
-    Route::post('/attendances', [AttendanceController::class, 'createAttendance']);
-    Route::post('/attendances/image', [AttendanceController::class, 'uploadImage']);
+    Route::get('/attendance', [AttendanceController::class, 'getAttendance']);
+    Route::post('/attendance', [AttendanceController::class, 'createAttendance']);
+    Route::post('/attendance/image', [AttendanceController::class, 'uploadImage']);
 });
 
 

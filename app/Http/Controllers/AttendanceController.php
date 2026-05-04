@@ -21,8 +21,11 @@ class AttendanceController extends Controller
         $formatted = [];
 
         foreach ($attendances as $attendance) {
-            $date = $attendance->created_at->format('Y-m-d');
-            $formatted[$date] = $attendance->status;
+            $formatted[] = [
+                "id" => $attendance->id,
+                "created_at" => $attendance->created_at,
+                "status" => $attendance->status
+            ];
         }
 
         return response()->json([
@@ -73,9 +76,12 @@ class AttendanceController extends Controller
 
         return response()->json([
             'data' => [
+                'id' => $attendance->id,
+                'user_id' => $attendance->user_id,
                 'status' => $attendance->status,
                 'location' => $attendance->location,
                 'notes' => $attendance->notes,
+                'created_at' => $attendance->created_at,
             ],
             'message' => 'Success create attendance!',
         ], 201);
