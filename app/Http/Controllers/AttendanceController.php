@@ -45,6 +45,7 @@ class AttendanceController extends Controller
             'status' => 'required|in:HADIR,IZIN,ALPHA',
             'location' => 'required|string|max:255',
             'notes' => 'required|string|max:255',
+            'url_image' => 'required|string|max:1024'
         ]);
 
         if ($validator->fails()) {
@@ -72,6 +73,7 @@ class AttendanceController extends Controller
             'status' => $request->status,
             'location' => $request->location,
             'notes' => $request->notes,
+            'url_image' => $request->url_image
         ]);
 
         return response()->json([
@@ -82,6 +84,7 @@ class AttendanceController extends Controller
                 'location' => $attendance->location,
                 'notes' => $attendance->notes,
                 'created_at' => $attendance->created_at,
+                'url_image' => $attendance->url_image,
             ],
             'message' => 'Success create attendance!',
         ], 201);
@@ -105,24 +108,24 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        // Ambil attendance terbaru
-        $latestAttendance = Attendance::where('user_id', $user->id)
-            ->latest('created_at')
-            ->first();
-
-        // Cek apakah attendance ditemukan
-        if (!$latestAttendance) {
-            return response()->json([
-                'data' => [],
-                'message' => 'Failed upload image! Attendance not found.',
-            ], 404);
-        }
-
-        // Jika attendance sudah memiliki URL image, maka hapus image lama
-        if ($latestAttendance->url_image) {
-            $oldImagePath = str_replace(asset('storage/'), '', $latestAttendance->url_image);
-            Storage::disk('public')->delete($oldImagePath);
-        }
+        /* // Ambil attendance terbaru */
+        /* $latestAttendance = Attendance::where('user_id', $user->id) */
+        /*     ->latest('created_at') */
+        /*     ->first(); */
+        /**/
+        /* // Cek apakah attendance ditemukan */
+        /* if (!$latestAttendance) { */
+        /*     return response()->json([ */
+        /*         'data' => [], */
+        /*         'message' => 'Failed upload image! Attendance not found.', */
+        /*     ], 404); */
+        /* } */
+        /**/
+        /* // Jika attendance sudah memiliki URL image, maka hapus image lama */
+        /* if ($latestAttendance->url_image) { */
+        /*     $oldImagePath = str_replace(asset('storage/'), '', $latestAttendance->url_image); */
+        /*     Storage::disk('public')->delete($oldImagePath); */
+        /* } */
 
         // Ambil image dari request
         $file = $request->file('image');
@@ -132,9 +135,9 @@ class AttendanceController extends Controller
         $urlImage = asset('storage/' . $path);
 
         // Update URL image pada table attendance
-        $latestAttendance->update([
-            'url_image' => $urlImage,
-        ]);
+        /* $latestAttendance->update([ */
+        /*     'url_image' => $urlImage, */
+        /* ]); */
 
         return response()->json([
             'data' => [

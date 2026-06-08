@@ -119,6 +119,12 @@ class AuthController extends Controller
         ], 401);
     }
 
-
+    public function update_password(request $Request) {
+        // Validasi input
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+    }
 
 }

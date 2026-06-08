@@ -7,7 +7,7 @@ use App\Models\Attendance;
 use Carbon\Carbon;
 
 
- 
+
 pest()->use(RefreshDatabase::class);
 
 // ========================
@@ -62,9 +62,10 @@ test('create attendance success', function () {
     $response = $this->withHeaders([
         'Authorization' => 'Bearer ' . $token
     ])->postJson('/api/attendance', [
-        'status' => 'HADIR', 
+        'status' => 'HADIR',
         'location' => 'Institut Teknologi Sumatera',
         'notes' => 'Hadir tepat waktu',
+        'url_image' => 'http://localhost:8000/test.jpg',
     ]);
 
     // $response->ddJson();
@@ -78,6 +79,7 @@ test('create attendance success', function () {
                 ->where('data.status', 'HADIR')
                 ->where('data.location', 'Institut Teknologi Sumatera')
                 ->where('data.notes', 'Hadir tepat waktu')
+                ->where('data.url_image', 'http://localhost:8000/test.jpg')
                 ->has('data.created_at')
                 ->etc()
         );
@@ -95,6 +97,7 @@ test('create attendance success', function () {
         'status' => 'HADIR',
         'location' => 'Institut Teknologi Sumatera',
         'notes' => 'Hadir tepat waktu',
+        'url_image' => 'http://localhost:8000/test.jpg',
         'created_at' => $created_at,
     ]);
 });
