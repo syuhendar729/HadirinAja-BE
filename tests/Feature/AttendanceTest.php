@@ -19,8 +19,8 @@ test('get attendance success', function () {
     $this->seed(DatabaseSeeder::class);
 
     $loginResponse = $this->postJson('/api/login', [
-        'email' => 'test@example.com',
-        'password' => 'test123'
+        'email' => 'fulan@example.com',
+        'password' => 'fulan123'
     ]);
 
     $token = $loginResponse->json('data.token');
@@ -51,10 +51,11 @@ test('get attendance success', function () {
 test('create attendance success', function () {
 
     $this->seed(DatabaseSeeder::class);
+    Carbon::setTestNow(Carbon::parse('2026-06-24 08:15:00'));
 
     $loginResponse = $this->postJson('/api/login', [
-        'email' => 'test@example.com',
-        'password' => 'test123',
+        'email' => 'fulan@example.com',
+        'password' => 'fulan123',
     ]);
 
     $token = $loginResponse->json('data.token');
@@ -62,9 +63,11 @@ test('create attendance success', function () {
     $response = $this->withHeaders([
         'Authorization' => 'Bearer ' . $token
     ])->postJson('/api/attendance', [
-        'status' => 'HADIR',
+        'status' => Attendance::STATUS_PRESENT,
         'location' => 'Institut Teknologi Sumatera',
-        'notes' => 'Hadir tepat waktu',
+        'latitude' => -5.3600000,
+        'longitude' => 105.3150000,
+        'notes' => 'Present on time',
         'url_image' => 'http://localhost:8000/test.jpg',
     ]);
 
@@ -76,16 +79,18 @@ test('create attendance success', function () {
             $json->where('message', 'Success create attendance!')
                 ->has('data')
                 ->has('data.id')
-                ->where('data.status', 'HADIR')
+                ->where('data.status', Attendance::STATUS_PRESENT)
                 ->where('data.location', 'Institut Teknologi Sumatera')
-                ->where('data.notes', 'Hadir tepat waktu')
+                ->where('data.latitude', -5.36)
+                ->where('data.longitude', 105.315)
+                ->where('data.notes', 'Present on time')
                 ->where('data.url_image', 'http://localhost:8000/test.jpg')
                 ->has('data.created_at')
                 ->etc()
         );
 
     // Ambil data user yang login
-    $user = \App\Models\User::where('email', 'test@example.com')->first();
+    $user = \App\Models\User::where('email', 'fulan@example.com')->first();
     $created_at = Carbon::parse($response->json('data.created_at'))
     ->format('Y-m-d H:i:s');
 
@@ -94,10 +99,14 @@ test('create attendance success', function () {
     $this->assertDatabaseHas('attendances', [
         'id' => $response->json('data.id'),
         'user_id' => $user->id,
-        'status' => 'HADIR',
+        'status' => Attendance::STATUS_PRESENT,
         'location' => 'Institut Teknologi Sumatera',
-        'notes' => 'Hadir tepat waktu',
+        'latitude' => -5.3600000,
+        'longitude' => 105.3150000,
+        'notes' => 'Present on time',
         'url_image' => 'http://localhost:8000/test.jpg',
         'created_at' => $created_at,
     ]);
+
+    Carbon::setTestNow();
 });

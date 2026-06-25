@@ -11,7 +11,7 @@ class UserController extends Controller
     public function getUser(Request $request)
     {
         return response()->json([
-            'data' => $request->user(),
+            'data' => $request->user()->detailData(),
             'message' => 'Success get user!',
         ], 200);
     }
@@ -44,7 +44,7 @@ class UserController extends Controller
         ]);
 
         return response()->json([
-            'data' => $user,
+            'data' => $user->detailData(),
             'message' => 'Success update user!',
         ], 200);
     }

@@ -1,104 +1,130 @@
 <?php
 
-use Illuminate\Testing\Fluent\AssertableJson;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Database\Seeders\DatabaseSeeder;
 
- 
 pest()->use(RefreshDatabase::class);
 
 // ========================
-// 1. TEST REGISTER (POST /api/register)
+// 1. TEST HALAMAN LOGIN ADMIN
 // ========================
 
-test('register success', function () {
-
-    $this->seed(DatabaseSeeder::class);
-
-    $response = $this->postJson('/api/register', [
-        'name' => 'Tester', 
-        'email' => 'tester@mail.com',
-        'password' => 'tester123',
-        'password_confirmation' => 'tester123'
-    ]);
+test('admin login page can be opened', function () {
+    $response = $this->get('/admin/login');
 
     $response
         ->assertOk()
-        ->assertJson(fn (AssertableJson $json) =>
-            $json->where('success', true)
-                ->where('message', 'Success create user!')
-                ->has('data.token')
-                ->where('data.name', 'Tester')
-                ->where('data.email', 'tester@mail.com')
-                ->etc()
-        );
-
-    $this->assertDatabaseHas('users', [
-        'email' => 'tester@mail.com'
-    ]);
+        ->assertSee('Admin Login')
+        ->assertSee('Email')
+        ->assertSee('Password')
+        ->assertSee('Login');
 });
 
 // ========================
-// 2. TEST LOGIN
+// 2. TEST ADMIN LOGIN SUCCESS
 // ========================
 
-test('login success', function () {
-    $this->seed(DatabaseSeeder::class);
+test('admin login success when role_id is 1', function () {
+    $admin = User::factory()->create([
+        'name' => 'Admin Test',
+        'email' => 'admin@test.com',
+        'password' => bcrypt('admin123'),
+        'role_id' => 1,
+    ]);
 
-    $response = $this->postJson("/api/login", [
-        'email' => 'test@example.com',
-        'password' => 'test123'
+    $response = $this->post('/admin/login', [
+        'email' => 'admin@test.com',
+        'password' => 'admin123',
+    ]);
+
+    $response->assertRedirect(route('admin.dashboard'));
+
+    $this->assertAuthenticatedAs($admin);
+});
+
+// ========================
+// 3. TEST USER BIASA TIDAK BISA LOGIN ADMIN
+// ========================
+
+test('non admin cannot login to admin dashboard', function () {
+    User::factory()->create([
+        'name' => 'User Test',
+        'email' => 'user@test.com',
+        'password' => bcrypt('user123'),
+        'role_id' => 2,
+    ]);
+
+    $response = $this->post('/admin/login', [
+        'email' => 'user@test.com',
+        'password' => 'user123',
     ]);
 
     $response
-        ->assertOk()
-        ->assertJson(fn (AssertableJson $json) =>
-            $json->where('success', true)
-                ->where('message', 'Success login!')
-                ->has('data.token')
-                ->where('data.email', 'test@example.com')
-                ->etc()
-        );
-    
-    $token = $response->json('data.token');
-    [$id, $plainTextToken] = explode('|', $token, 2);
-    
-    $this->assertDatabaseHas('personal_access_tokens', [
-        'token' => hash('sha256', $plainTextToken),
-    ]);
+        ->assertRedirect('/admin/login')
+        ->assertSessionHasErrors('email');
+
+    $this->assertGuest();
 });
 
 // ========================
-// 3. TEST LOGOUT
+// 4. TEST LOGIN GAGAL PASSWORD SALAH
 // ========================
 
-test('logout success', function () {
-
-    $this->seed(DatabaseSeeder::class);
-
-    $loginResponse = $this->postJson('/api/login', [
-        'email' => 'test@example.com',
-        'password' => 'test123',
+test('admin login failed with wrong password', function () {
+    User::factory()->create([
+        'name' => 'Admin Test',
+        'email' => 'admin@test.com',
+        'password' => bcrypt('admin123'),
+        'role_id' => 1,
     ]);
 
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer " . $loginResponse->json('data.token')
-    ])->deleteJson("/api/logout");
+    $response = $this->post('/admin/login', [
+        'email' => 'admin@test.com',
+        'password' => 'wrongpassword',
+    ]);
 
-    // $response->ddJson();
-    // $response->ddBody();
     $response
-        ->assertOk()
-        ->assertJson(fn (AssertableJson $json) =>
-            $json->where('message', 'Success logout!')
-                ->etc()
-        );
+        ->assertRedirect('/admin/login')
+        ->assertSessionHasErrors('email');
 
-    $token = $loginResponse->json('data.token');
-    [$id, $plainTextToken] = explode('|', $token, 2);
-    
-    $this->assertDatabaseMissing('personal_access_tokens', [
-        'token' => hash('sha256', $plainTextToken),
-    ]);
+    $this->assertGuest();
 });
 
+// ========================
+// 5. TEST VALIDASI INPUT KOSONG
+// ========================
+
+test('admin login failed when input is empty', function () {
+    $response = $this->post('/admin/login', [
+        'email' => '',
+        'password' => '',
+    ]);
+
+    $response
+        ->assertRedirect('/admin/login')
+        ->assertSessionHasErrors(['email', 'password']);
+
+    $this->assertGuest();
+});
+
+// ========================
+// 6. TEST ADMIN LOGOUT
+// ========================
+
+test('admin logout success', function () {
+    $admin = User::factory()->create([
+        'name' => 'Admin Test',
+        'email' => 'admin@test.com',
+        'password' => bcrypt('admin123'),
+        'role_id' => 1,
+    ]);
+
+    $this->actingAs($admin);
+
+    $response = $this->post('/admin/logout');
+
+    $response->assertRedirect(route('admin.login'));
+
+    $this->assertGuest();
+});

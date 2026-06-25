@@ -1,5 +1,7 @@
 <?php
 
+// File: routes/api.php
+
 use App\Http\Controllers\AttendanceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +21,7 @@ Route::get('/', function () {
 
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
+Route::post('admin-login', [AuthController::class, 'adminLogin']);
 
 Route::middleware('auth:sanctum')->group(function () {
     // Route User and Auth

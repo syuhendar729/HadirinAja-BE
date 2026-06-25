@@ -17,8 +17,8 @@ test('get user success', function () {
     $this->seed(DatabaseSeeder::class);
 
     $loginResponse = $this->postJson('/api/login', [
-        'email' => 'test@example.com',
-        'password' => 'test123'
+        'email' => 'fulan@example.com',
+        'password' => 'fulan123'
     ]);
 
     $token = $loginResponse->json('data.token');
@@ -35,13 +35,20 @@ test('get user success', function () {
         ->assertJson(fn (AssertableJson $json) =>
             $json->where('message', 'Success get user!')
                 ->has('data.id')
-                ->where('data.name', 'Test User')
-                ->where('data.email', 'test@example.com')
+                ->where('data.name', 'fulan')
+                ->where('data.email', 'fulan@example.com')
                 ->has('data.created_at')
                 ->has('data.updated_at')
                 ->has('data.profile_picture')
                 ->has('data.nik')
                 ->has('data.role_id')
+                ->has('data.position')
+                ->has('data.phone')
+                ->has('data.alamat')
+                ->has('data.total.present')
+                ->has('data.total.late')
+                ->has('data.total.leave')
+                ->has('data.total.absent')
                 ->etc()
         );
 });
@@ -89,6 +96,13 @@ test('update user success', function () {
                 ->has('data.profile_picture')
                 ->where('data.nik', '333222111000')
                 ->has('data.role_id')
+                ->has('data.position')
+                ->has('data.phone')
+                ->has('data.alamat')
+                ->has('data.total.present')
+                ->has('data.total.late')
+                ->has('data.total.leave')
+                ->has('data.total.absent')
                 ->etc()
         );
 
@@ -103,8 +117,8 @@ test('delete user success', function () {
     $this->seed(DatabaseSeeder::class);
 
     $loginResponse = $this->postJson('/api/login', [
-        'email' => 'test@example.com',
-        'password' => 'test123'
+        'email' => 'fulan@example.com',
+        'password' => 'fulan123'
     ]);
 
     $token = $loginResponse->json('data.token');
