@@ -11,7 +11,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/startbootstrap-sb-admin-2/4.1.4/css/sb-admin-2.min.css" rel="stylesheet">
 </head>
 
-<body id="page-top" data-users-url="{{ route('admin.api.users') }}" data-user-show-base-url="{{ url('/admin/users') }}" data-user-api-base-url="{{ url('/admin/api/users') }}" data-user-edit-base-url="{{ url('/admin/users') }}">
+<body id="page-top" data-users-url="{{ route('admin.api.users', absolute: false) }}" data-user-show-base-url="/admin/users" data-user-api-base-url="/admin/api/users" data-user-edit-base-url="/admin/users">
     <div id="wrapper">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('admin.dashboard') }}">
