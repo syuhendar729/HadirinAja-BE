@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class AttendanceController extends Controller
 {
+    private const ATTENDANCE_TIMEZONE = 'Asia/Jakarta';
+
     // ========================
     // 1. GET ATTENDANCES
     // ========================
@@ -62,9 +64,10 @@ class AttendanceController extends Controller
         }
 
         $setting = AttendanceSetting::current();
+        $now = $this->attendanceNow();
 
         if (in_array($request->status, [Attendance::STATUS_PRESENT, Attendance::STATUS_LATE], true)) {
-            $ruleError = $this->validateAttendanceRule($request, $setting);
+            $ruleError = $this->validateAttendanceRule($request, $setting, $now);
 
             if ($ruleError) {
                 return response()->json([
@@ -75,8 +78,10 @@ class AttendanceController extends Controller
         }
 
         // Cek apakah user sudah melakukan absensi pada hari ini
+        [$todayStart, $todayEnd] = $this->attendanceDayBounds($now);
+
         $todayAttendance = Attendance::where('user_id', $user->id)
-            ->whereDate('created_at', now()->toDateString())
+            ->whereBetween('created_at', [$todayStart, $todayEnd])
             ->first();
 
         if ($todayAttendance) {
@@ -89,11 +94,11 @@ class AttendanceController extends Controller
         $status = match ($request->status) {
             Attendance::STATUS_LEAVE => Attendance::STATUS_LEAVE,
             Attendance::STATUS_ABSENT => Attendance::STATUS_ABSENT,
-            default => $this->resolveAttendanceStatus($setting),
+            default => $this->resolveAttendanceStatus($setting, $now),
         };
         $permissionStatus = $request->status === Attendance::STATUS_LEAVE ? 'pending' : null;
 
-        $attendance = Attendance::create([
+        $attendance = new Attendance([
             'user_id' => $user->id,
             'status' => $status,
             'permission_status' => $permissionStatus,
@@ -103,6 +108,9 @@ class AttendanceController extends Controller
             'notes' => $request->notes,
             'url_image' => $request->url_image
         ]);
+        $attendance->created_at = $now->toDateTimeString();
+        $attendance->updated_at = $now->toDateTimeString();
+        $attendance->save();
 
         return response()->json([
             'data' => [
@@ -178,10 +186,8 @@ class AttendanceController extends Controller
         ], 200);
     }
 
-    private function validateAttendanceRule(Request $request, AttendanceSetting $setting): ?string
+    private function validateAttendanceRule(Request $request, AttendanceSetting $setting, Carbon $now): ?string
     {
-        $now = now();
-
         if (! $this->isWorkday($now, $setting)) {
             return 'Failed create attendance! Today is not a workday.';
         }
@@ -190,8 +196,8 @@ class AttendanceController extends Controller
             return 'Failed create attendance! Attendance time setting is invalid.';
         }
 
-        $workStart = $this->timeToday($setting->work_start_time);
-        $workEnd = $this->timeToday($setting->work_end_time);
+        $workStart = $this->timeOnAttendanceDate($setting->work_start_time, $now);
+        $workEnd = $this->timeOnAttendanceDate($setting->work_end_time, $now);
 
         if ($now->lt($workStart) || $now->gt($workEnd)) {
             return 'Failed create attendance! Attendance is only allowed during work hours.';
@@ -215,9 +221,9 @@ class AttendanceController extends Controller
         return null;
     }
 
-    private function resolveAttendanceStatus(AttendanceSetting $setting): string
+    private function resolveAttendanceStatus(AttendanceSetting $setting, Carbon $now): string
     {
-        return now()->gt($this->timeToday($setting->late_deadline))
+        return $now->gt($this->timeOnAttendanceDate($setting->late_deadline, $now))
             ? Attendance::STATUS_LATE
             : Attendance::STATUS_PRESENT;
     }
@@ -240,9 +246,26 @@ class AttendanceController extends Controller
         return $day >= $setting->workday_start || $day <= $setting->workday_end;
     }
 
-    private function timeToday(string $time): Carbon
+    private function timeOnAttendanceDate(string $time, Carbon $date): Carbon
     {
-        return Carbon::createFromFormat('Y-m-d H:i:s', now()->toDateString() . ' ' . $time);
+        return Carbon::createFromFormat(
+            'Y-m-d H:i:s',
+            $date->toDateString() . ' ' . $time,
+            self::ATTENDANCE_TIMEZONE
+        );
+    }
+
+    private function attendanceNow(): Carbon
+    {
+        return now(self::ATTENDANCE_TIMEZONE);
+    }
+
+    private function attendanceDayBounds(Carbon $date): array
+    {
+        return [
+            $date->copy()->startOfDay()->toDateTimeString(),
+            $date->copy()->endOfDay()->toDateTimeString(),
+        ];
     }
 
     private function distanceInMeters(float $latitudeFrom, float $longitudeFrom, float $latitudeTo, float $longitudeTo): float
